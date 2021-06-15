@@ -46,7 +46,7 @@
   <ciManagement>
     <system>CircleCI</system>
     <url>https://circleci.com/gh/greenmail-mail-test/greenmail</url>
-    <notifiers />
+    <notifiers/>
   </ciManagement>
 
   <!-- details about the organization that 'owns' the project -->
@@ -111,8 +111,8 @@
       <properties>
         <id>zegon</id>
       </properties>
-      <email />
-      <url />
+      <email/>
+      <url/>
     </contributor>
   </contributors>
 
@@ -359,7 +359,7 @@
       <dependency>
         <groupId>com.icegreen</groupId>
         <artifactId>greenmail</artifactId>
-        <version>1.6.1-SNAPSHOT</version>
+        <version>1.6.1</version>
       </dependency>
       <dependency>
         <groupId>com.icegreen</groupId>
@@ -621,7 +621,7 @@
             <!-- javadoc report -->
             <artifactId>maven-javadoc-plugin</artifactId>
             <configuration>
-              <quiet />
+              <quiet/>
               <aggregate>true</aggregate>
               <linksource>true</linksource>
               <links>
