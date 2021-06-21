@@ -15,20 +15,17 @@ import com.sun.mail.imap.IMAPStore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.mail.*;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.*;
+import jakarta.mail.event.MessageCountEvent;
+import jakarta.mail.event.MessageCountListener;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
-import static javax.mail.Flags.Flag.DELETED;
+import static jakarta.mail.Flags.Flag.DELETED;
 import static org.assertj.core.api.Assertions.*;
 
-/**a
- * @author Wael Chatila
- * @version $Id: $
- * @since Jan 28, 2006
- */
 public class ImapServerTest {
     private static final String UMLAUTS = "öäü \u00c4 \u00e4";
     @Rule
@@ -91,7 +88,7 @@ public class ImapServerTest {
     @Test
     public void testRetreiveSimpleWithNonDefaultPassword() throws Exception {
         assertThat(greenMail.getImap()).isNotNull();
-        final String to = "test@localhost.com";
+        final String to = "test@localhost";
         final String password = "donotharmanddontrecipricateharm";
         greenMail.setUser(to, password);
         final String subject = GreenMailUtil.random();
@@ -100,12 +97,9 @@ public class ImapServerTest {
         greenMail.waitForIncomingEmail(5000, 1);
 
         try (Retriever retriever = new Retriever(greenMail.getImap())) {
-            try {
-                retriever.getMessages(to, "wrongpassword");
-                fail("Expected failed login");
-            } catch (Throwable e) {
-                // ok
-            }
+            assertThatThrownBy(() -> retriever.getMessages(to, "wrongpassword"))
+                .isInstanceOf(RuntimeException.class)
+                .hasCauseInstanceOf(AuthenticationFailedException.class);
 
             Message[] messages = retriever.getMessages(to, password);
             assertThat(messages.length).isEqualTo(1);
@@ -165,10 +159,9 @@ public class ImapServerTest {
             testQuota.setResourceLimit("STORAGE", 1024L * 42L);
             testQuota.setResourceLimit("MESSAGES", 5L);
 
-            final QuotaAwareStore quotaAwareStore = store;
-            quotaAwareStore.setQuota(testQuota);
+            store.setQuota(testQuota);
 
-            Quota[] quotas = quotaAwareStore.getQuota("INBOX");
+            Quota[] quotas = store.getQuota("INBOX");
             assertThat(quotas).isNotNull();
             assertThat(quotas.length).isEqualTo(1);
             assertThat(quotas[0].resources).isNotNull();
@@ -179,7 +172,7 @@ public class ImapServerTest {
             assertThat(1).isEqualTo(quotas[0].resources[1].usage);
 //            assertThat(m.getSize()).isEqualTo(quotas[0].resources[0].usage);
 
-            quotas = quotaAwareStore.getQuota("");
+            quotas = store.getQuota("");
             assertThat(quotas).isNotNull();
             assertThat(quotas.length).isEqualTo(0);
             // TODO: Quota on ""
@@ -192,19 +185,18 @@ public class ImapServerTest {
     public void testQuotaCapability() throws MessagingException {
         greenMail.setUser("foo@localhost", "pwd");
         greenMail.setQuotaSupported(false);
-        final IMAPStore store = greenMail.getImap().createStore();
-        try {
+        try (IMAPStore store = greenMail.getImap().createStore()) {
             store.connect("foo@localhost", "pwd");
 
-            Quota testQuota = new Quota("INBOX");
-            testQuota.setResourceLimit("STORAGE", 1024L * 42L);
-            testQuota.setResourceLimit("MESSAGES", 5L);
-            store.setQuota(testQuota);
-            fail("Excepted MessageException since quota capability is turned off");
-        } catch (MessagingException ex) {
-            assertThat("QUOTA not supported").isEqualTo(ex.getMessage());
-        } finally {
-            store.close();
+            try {
+                Quota testQuota = new Quota("INBOX");
+                testQuota.setResourceLimit("STORAGE", 1024L * 42L);
+                testQuota.setResourceLimit("MESSAGES", 5L);
+                store.setQuota(testQuota);
+                fail("Excepted MessageException since quota capability is turned off");
+            } catch (MessagingException ex) {
+                assertThat("QUOTA not supported").isEqualTo(ex.getMessage());
+            }
         }
     }
 
@@ -264,13 +256,13 @@ public class ImapServerTest {
         final IMAPStore store = greenMail.getImap().createStore();
         store.connect("foo@localhost", "pwd");
         try {
-
             // Create some folders
             IMAPFolder folder = (IMAPFolder) store.getFolder("INBOX");
             IMAPFolder newFolder = (IMAPFolder) folder.getFolder("foo-folder");
             assertThat(newFolder.exists()).isFalse();
 
             assertThat(newFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)).isTrue();
+            assertThat(newFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES)).isFalse();
 
             // Re-read and validate
             folder = (IMAPFolder) store.getFolder("INBOX");
@@ -282,7 +274,7 @@ public class ImapServerTest {
     }
 
     /**
-     * 
+     *
      * https://tools.ietf.org/html/rfc3501#page-37 :
      * <q>
      *     Renaming INBOX is permitted, and has special behavior.  It moves
@@ -291,8 +283,6 @@ public class ImapServerTest {
      *     inferior hierarchical names of INBOX, these are unaffected by a
      *     rename of INBOX.
      *  </q>
-     *
-     * @throws MessagingException
      */
     @Test
     public void testRenameINBOXFolder() throws MessagingException {
@@ -597,6 +587,44 @@ public class ImapServerTest {
             assertThat(messages[1].getSubject()).isEqualTo("Test subject #3");
             assertThat(messages[2].getSubject()).isEqualTo("Test subject #4");
             assertThat(messages[3].getSubject()).isEqualTo("Test subject #5");
+        } finally {
+            store.close();
+        }
+    }
+
+    @Test(timeout = 10000)
+    public void testIdle() throws MessagingException {
+        greenMail.setUser("foo@localhost", "pwd");
+
+        final IMAPStore store = greenMail.getImap().createStore();
+        store.connect("foo@localhost", "pwd");
+        try {
+            Folder inboxFolder = store.getFolder("INBOX");
+            inboxFolder.open(Folder.READ_ONLY);
+            int[] messages = new int[] { 0 };
+            MessageCountListener listener = new MessageCountListener() {
+                @Override
+                public void messagesRemoved(MessageCountEvent e) {
+                }
+
+                @Override
+                public void messagesAdded(MessageCountEvent e) {
+                    messages[0] = e.getMessages()[0].getMessageNumber();
+                }
+            };
+            inboxFolder.addMessageCountListener(listener);
+            new Thread(() -> {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e1) {
+                }
+                GreenMailUtil.sendTextEmail("foo@localhost", "bar@localhost", "Test subject", "Test message",
+                        ServerSetupTest.SMTP);
+            }).start();
+            ((IMAPFolder) inboxFolder).idle(true);
+            assertThat(messages).hasSize(1);
+            assertThat(messages[0]).isGreaterThan(0);
+            inboxFolder.close();
         } finally {
             store.close();
         }

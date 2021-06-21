@@ -43,7 +43,7 @@ public class MultiRequestTest {
 
         public void run() {
             for (int i = 0; i < count; i++) {
-                GreenMailUtil.sendTextEmailTest(to, "from@localhost.com", "subject", "body");
+                GreenMailUtil.sendTextEmailTest(to, "from@localhost", "subject", "body");
             }
             finished = true;
         }
@@ -52,8 +52,8 @@ public class MultiRequestTest {
     private static class RetrieverThread extends Thread {
         String to;
         volatile int count;
-        private int expectedCount;
-        private AbstractServer server;
+        private final int expectedCount;
+        private final AbstractServer server;
 
         RetrieverThread(String to, AbstractServer server, ThreadGroup group, int expectedCount) {
             super(group, RetrieverThread.class.getName());
@@ -111,7 +111,7 @@ public class MultiRequestTest {
 
         // Then start receivers
         ThreadGroup group = new ThreadGroup(RetrieverThread.class.getName());
-        List<RetrieverThread> retrieverThreads = new ArrayList<RetrieverThread>();
+        List<RetrieverThread> retrieverThreads = new ArrayList<>();
         startRetrieverThreads(num, group, retrieverThreads);
         waitForThreadGroup(group, 20000);
 
@@ -129,7 +129,7 @@ public class MultiRequestTest {
         startSenderThreads(num);
 
         // Start receivers at the same time senders are also started
-        List<RetrieverThread> retrieverThreads = new ArrayList<RetrieverThread>();
+        List<RetrieverThread> retrieverThreads = new ArrayList<>();
         ThreadGroup group = new ThreadGroup(RetrieverThread.class.getName());
         startRetrieverThreads(num, group, retrieverThreads);
         waitForThreadGroup(group, 30000);

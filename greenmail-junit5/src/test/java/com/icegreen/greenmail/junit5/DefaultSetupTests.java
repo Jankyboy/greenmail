@@ -1,7 +1,7 @@
 package com.icegreen.greenmail.junit5;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import com.icegreen.greenmail.util.GreenMailUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +20,7 @@ class DefaultSetupTests {
     @Test
     @DisplayName("Send test")
     void testSend() throws MessagingException {
-        GreenMailUtil.sendTextEmailTest("to@localhost.com", "from@localhost.com", "subject", "body");
+        GreenMailUtil.sendTextEmailTest("to@localhost", "from@localhost", "subject", "body");
         final MimeMessage[] emails = greenMail.getReceivedMessages();
         assertEquals(1, emails.length);
         final MimeMessage email = emails[0];

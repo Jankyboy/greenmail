@@ -4,7 +4,7 @@ import com.icegreen.greenmail.junit.GreenMailRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,8 +33,8 @@ public class GreenMailTest {
 
     @Test
     public void getReceivedMessagesForDomainLowerCaseRecipientAddress() {
-        final String to = "to@localhost.com";
-        GreenMailUtil.sendTextEmailTest(to, "from@localhost.com", "subject", "body");
+        final String to = "to@localhost";
+        GreenMailUtil.sendTextEmailTest(to, "from@localhost", "subject", "body");
 
         final MimeMessage[] receivedMessagesForDomain = greenMail.getReceivedMessagesForDomain(to);
         assertThat(receivedMessagesForDomain.length).isEqualTo(1);
@@ -42,8 +42,8 @@ public class GreenMailTest {
 
     @Test
     public void getReceivedMessagesForDomainWithUpperCaseRecipientAddress() {
-        final String to = "someReceiver@localhost.com";
-        GreenMailUtil.sendTextEmailTest(to, "from@localhost.com", "subject", "body");
+        final String to = "someReceiver@localhost";
+        GreenMailUtil.sendTextEmailTest(to, "from@localhost", "subject", "body");
 
         final MimeMessage[] receivedMessagesForDomain = greenMail.getReceivedMessagesForDomain(to);
         assertThat(receivedMessagesForDomain.length).isEqualTo(1);

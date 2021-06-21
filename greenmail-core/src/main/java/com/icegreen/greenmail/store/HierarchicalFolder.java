@@ -7,12 +7,12 @@ package com.icegreen.greenmail.store;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.mail.Flags;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.UIDFolder;
-import javax.mail.internet.MimeMessage;
-import javax.mail.search.SearchTerm;
+import jakarta.mail.Flags;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.UIDFolder;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.search.SearchTerm;
 
 import com.icegreen.greenmail.foedus.util.MsgRangeFilter;
 import com.icegreen.greenmail.imap.ImapConstants;
@@ -31,16 +31,17 @@ class HierarchicalFolder implements MailFolder, UIDFolder {
         PERMANENT_FLAGS.add(Flags.Flag.DRAFT);
         PERMANENT_FLAGS.add(Flags.Flag.FLAGGED);
         PERMANENT_FLAGS.add(Flags.Flag.SEEN);
+        PERMANENT_FLAGS.add(Flags.Flag.USER);
     }
 
     private final StoredMessageCollection mailMessages = new ListBasedStoredMessageCollection();
-    private final List<FolderListener> _mailboxListeners = Collections.synchronizedList(new ArrayList<FolderListener>());
+    private final List<FolderListener> _mailboxListeners = Collections.synchronizedList(new ArrayList<>());
     protected String name;
-    private final Collection<HierarchicalFolder> children = new CopyOnWriteArrayList<HierarchicalFolder>();
+    private final Collection<HierarchicalFolder> children = new CopyOnWriteArrayList<>();
     private HierarchicalFolder parent;
     private boolean isSelectable = false;
-    private AtomicLong nextUid = new AtomicLong(1);
-    private long uidValidity;
+    private final AtomicLong nextUid = new AtomicLong(1);
+    private final long uidValidity;
 
     protected HierarchicalFolder(HierarchicalFolder parent, String name) {
         this.name = name;
@@ -135,6 +136,11 @@ class HierarchicalFolder implements MailFolder, UIDFolder {
     @Override
     public long getUidNext() { // TODO: Remove in 1.7
         return getUIDNext();
+    }
+
+    @Override
+    public long getUIDNext() {
+        return nextUid.get();
     }
 
     @Override
@@ -426,7 +432,7 @@ class HierarchicalFolder implements MailFolder, UIDFolder {
                     messages.add(mailMessage.getMimeMessage());
                 }
             }
-            return messages.toArray(new Message[messages.size()]);
+            return messages.toArray(new Message[0]);
         }
     }
 
@@ -444,9 +450,10 @@ class HierarchicalFolder implements MailFolder, UIDFolder {
                     messages.add(storedMessage.getMimeMessage());
                 }
             }
-            return messages.toArray(new Message[messages.size()]);
+            return messages.toArray(new Message[0]);
         }
     }
+
 
     @Override
     public long getUID(Message message) {
@@ -460,10 +467,5 @@ class HierarchicalFolder implements MailFolder, UIDFolder {
         }
         throw new IllegalStateException("No match found for " + message);
     }
-
-    @Override
-    public long getUIDNext() {
-        return nextUid.get();
-    }
-
+ 
 }

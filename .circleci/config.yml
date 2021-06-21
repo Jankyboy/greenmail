@@ -5,7 +5,10 @@ jobs:
     working_directory: ~/circleci-greenmail
 
     docker:
-        - image: openjdk:8u252-slim-buster
+        - image: openjdk:8u292-slim-buster
+          auth:
+            username: $DOCKERHUB_IDENTITY
+            password: $DOCKERHUB_PASSWORD
           environment:
             TZ: UTC
 
@@ -49,7 +52,10 @@ jobs:
     working_directory: ~/circleci-greenmail
 
     docker:
-        - image: openjdk:11.0.7-jdk-slim-buster
+        - image: openjdk:11.0.11-jdk-slim-buster
+          auth:
+            username: $DOCKERHUB_IDENTITY
+            password: $DOCKERHUB_PASSWORD
           environment:
             TZ: UTC
 
@@ -88,9 +94,14 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+ 
 workflows:
   version: 2
   build:
     jobs:
-      - "openjdk-8"
-      - "openjdk-11"
+      - openjdk-8:
+          context:
+            - docker
+      - openjdk-11:
+          context:
+            - docker

@@ -9,9 +9,9 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Session;
-import javax.mail.Store;
+import jakarta.mail.NoSuchProviderException;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
 
 import com.icegreen.greenmail.Managers;
 import com.icegreen.greenmail.util.DummySSLServerSocketFactory;
@@ -30,9 +30,10 @@ public abstract class AbstractServer extends Thread implements Service {
     protected final InetAddress bindTo;
     protected ServerSocket serverSocket = null;
     protected static final int CLIENT_SOCKET_SO_TIMEOUT = 30 * 1000;
+    private int clientSocketTimeout = CLIENT_SOCKET_SO_TIMEOUT;
     protected final Managers managers;
-    protected final ServerSetup setup;
-    private final List<ProtocolHandler> handlers = Collections.synchronizedList(new ArrayList<ProtocolHandler>());
+    protected ServerSetup setup;
+    private final List<ProtocolHandler> handlers = Collections.synchronizedList(new ArrayList<>());
     private volatile boolean keepRunning = false;
     private volatile boolean running = false;
     private final CountDownLatch startupMonitor = new CountDownLatch(1);
@@ -43,13 +44,14 @@ public abstract class AbstractServer extends Thread implements Service {
         if (null == bindAddress) {
             bindAddress = setup.getDefaultBindAddress();
         }
-        setName(setup.getProtocol() + ':' + bindAddress + ':' + setup.getPort());
         try {
             bindTo = InetAddress.getByName(bindAddress);
         } catch (UnknownHostException e) {
             throw new RuntimeException("Failed to setup bind address for " + getName(), e);
         }
         this.managers = managers;
+        // Will be updated after bind for dynamic ports
+        setName(setup.getProtocol() + ':' + setup.getBindAddress() + ':' + setup.getPort());
     }
 
     /**
@@ -78,6 +80,11 @@ public abstract class AbstractServer extends Thread implements Service {
             }
             throw ex;
         }
+
+        // Port gets dynamically allocated if 0, so need to wait till after bind
+        setup = setup.withPort(socket.getLocalPort());
+        setName(setup.getProtocol() + ':' + setup.getBindAddress() + ':' + setup.getPort());
+
         return socket;
     }
 
@@ -97,8 +104,8 @@ public abstract class AbstractServer extends Thread implements Service {
                     } else {
                         handleClientSocket(clientSocket);
                     }
-                } catch (IOException ignored) {
-                    log.trace("Error while processing client socket for {}", getName(), ignored);
+                } catch (IOException ex) {
+                    log.trace("Error while processing client socket for {}", getName(), ex);
                 }
             }
         } finally {
@@ -143,21 +150,22 @@ public abstract class AbstractServer extends Thread implements Service {
         }
     }
 
+    public void setClientSocketTimeout(int clientSocketTimeout) {
+        this.clientSocketTimeout = clientSocketTimeout;
+    }
+
     protected void handleClientSocket(Socket clientSocket) throws SocketException {
-        clientSocket.setSoTimeout(CLIENT_SOCKET_SO_TIMEOUT);
+        clientSocket.setSoTimeout(clientSocketTimeout);
         final ProtocolHandler handler = createProtocolHandler(clientSocket);
         addHandler(handler);
         String threadName = getName() + "<-" + clientSocket.getInetAddress() + ":" + clientSocket.getPort();
         log.debug("Handling new client connection {}", threadName);
-        final Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    handler.run(); // NOSONAR
-                } finally {
-                    // Make sure to de-register, see https://github.com/greenmail-mail-test/greenmail/issues/18
-                    removeHandler(handler);
-                }
+        final Thread thread = new Thread(() -> {
+            try {
+                handler.run(); // NOSONAR
+            } finally {
+                // Make sure to de-register, see https://github.com/greenmail-mail-test/greenmail/issues/18
+                removeHandler(handler);
             }
         });
         thread.setName(threadName);

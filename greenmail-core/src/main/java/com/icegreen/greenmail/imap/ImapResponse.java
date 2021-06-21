@@ -11,7 +11,7 @@ import com.icegreen.greenmail.store.MessageFlags;
 import com.icegreen.greenmail.util.EncodingUtil;
 import com.icegreen.greenmail.util.InternetPrintWriter;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 import java.io.OutputStream;
 
 /**
@@ -19,7 +19,7 @@ import java.io.OutputStream;
  * to the client.
  */
 public class ImapResponse implements ImapConstants {
-    private InternetPrintWriter writer;
+    private final InternetPrintWriter writer;
     private String tag = UNTAGGED;
 
     public ImapResponse(OutputStream output) {
@@ -63,7 +63,7 @@ public class ImapResponse implements ImapConstants {
      * Writes a standard NO response on command failure, together with a
      * descriptive message.
      * Response is written as:
-     * <pre>     a01 NO COMMAND_NAME failed. <reason></pre>
+     * <pre>     a01 NO COMMAND_NAME failed. &lt;reason&gt;</pre>
      *
      * @param command The ImapCommand which failed.
      * @param reason  A message describing why the command failed.
@@ -76,7 +76,7 @@ public class ImapResponse implements ImapConstants {
      * Writes a standard NO response on command failure, together with a
      * descriptive message.
      * Response is written as:
-     * <pre>     a01 NO [responseCode] COMMAND_NAME failed. <reason></pre>
+     * <pre>     a01 NO [responseCode] COMMAND_NAME failed. &lt;reason&gt;</pre>
      *
      * @param command      The ImapCommand which failed.
      * @param responseCode The Imap response code to send.
@@ -98,7 +98,7 @@ public class ImapResponse implements ImapConstants {
      * Writes a standard BAD response on command error, together with a
      * descriptive message.
      * Response is written as:
-     * <pre>     a01 BAD <message></pre>
+     * <pre>     a01 BAD &lt;message&gt;</pre>
      *
      * @param message The descriptive error message.
      */

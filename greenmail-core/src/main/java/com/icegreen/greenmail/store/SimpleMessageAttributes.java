@@ -8,9 +8,9 @@ package com.icegreen.greenmail.store;
 
 
 import java.util.*;
-import javax.mail.BodyPart;
-import javax.mail.MessagingException;
-import javax.mail.internet.*;
+import jakarta.mail.BodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.*;
 
 import com.icegreen.greenmail.mail.MailAddress;
 import com.icegreen.greenmail.util.GreenMailUtil;
@@ -123,7 +123,7 @@ public class SimpleMessageAttributes
      * Parses key data items from a MimeMessage for seperate storage.
      * TODO this is a mess, and should be completely revamped.
      */
-    void parseMimePart(MimePart part) throws MessagingException {
+    void parseMimePart(MimePart part) {
         final String body = GreenMailUtil.getBody(part);
         size = body.length();
 

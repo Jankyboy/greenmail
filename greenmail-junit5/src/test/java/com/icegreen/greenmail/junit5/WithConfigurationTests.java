@@ -1,7 +1,7 @@
 package com.icegreen.greenmail.junit5;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.util.GreenMailUtil;
@@ -18,12 +18,12 @@ class WithConfigurationTests {
     @RegisterExtension
     GreenMailExtension greenMail = new GreenMailExtension()
         .withConfiguration(GreenMailConfiguration.aConfig()
-            .withUser("to@localhost.com", "login-id", "password"));
+            .withUser("to@localhost", "login-id", "password"));
 
     @Test
     @DisplayName("Receive test")
     void testReceive() throws MessagingException {
-        GreenMailUtil.sendTextEmailTest("to@localhost.com", "from@localhost.com", "subject", "body");
+        GreenMailUtil.sendTextEmailTest("to@localhost", "from@localhost", "subject", "body");
         final MimeMessage[] emails = greenMail.getReceivedMessages();
         assertEquals(1, emails.length);
         final MimeMessage email = emails[0];

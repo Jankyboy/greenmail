@@ -12,12 +12,12 @@ import com.icegreen.greenmail.store.MessageFlags;
 import com.icegreen.greenmail.store.StoredMessage;
 import com.icegreen.greenmail.util.GreenMailUtil;
 
-import javax.mail.BodyPart;
-import javax.mail.Flags;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Flags;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -324,7 +324,7 @@ class FetchCommand extends SelectedStateCommand implements UidEnabledCommand {
         String sub = value.substring(startPos);
         strings.add(sub);
 
-        return strings.toArray(new String[strings.size()]);
+        return strings.toArray(new String[0]);
     }
 
     private void addHeaders(Enumeration<?> inum, StringBuilder response, Partial partial) {
@@ -348,7 +348,7 @@ class FetchCommand extends SelectedStateCommand implements UidEnabledCommand {
             response.append('}');
             response.append("\r\n");
 
-            response.append(partialContent.substring(start,start + len));
+            response.append(partialContent, start, start + len);
         } else {
             response.append("{");
             response.append(count);
@@ -483,7 +483,6 @@ class FetchCommand extends SelectedStateCommand implements UidEnabledCommand {
                 throws ProtocolException {
             char next = request.nextChar();
             if (isCrOrLf(next)) {
-                request.dumpLine();
                 throw new ProtocolException("Unexpected end of line (CR or LF).");
             }
             return next;

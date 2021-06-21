@@ -12,20 +12,39 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.mail.MessagingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.icegreen.greenmail.imap.ImapHostManager;
+import com.icegreen.greenmail.mail.MailAddress;
+import com.icegreen.greenmail.mail.MovingMessage;
 
 public class UserManager {
     private static final Logger log = LoggerFactory.getLogger(UserManager.class);
     /**
      * User list by their trimmed, lower-cased user names
      */
-    private Map<String, GreenMailUser> loginToUser = new ConcurrentHashMap<>();
-    private Map<String, GreenMailUser> emailToUser = new ConcurrentHashMap<>();
-    private ImapHostManager imapHostManager;
+    private final Map<String, GreenMailUser> loginToUser = new ConcurrentHashMap<>();
+    private final Map<String, GreenMailUser> emailToUser = new ConcurrentHashMap<>();
+    private final ImapHostManager imapHostManager;
     private boolean authRequired = true;
+
+    private MessageDeliveryHandler messageDeliveryHandler = new MessageDeliveryHandler(){
+        public GreenMailUser handle(MovingMessage msg, MailAddress mailAddress) throws UserException {
+            GreenMailUser user = getUserByEmail(mailAddress.getEmail());
+            if(null==user) {
+                String login = mailAddress.getEmail();
+                String email = mailAddress.getEmail();
+                String password = mailAddress.getEmail();
+                user = createUser(email, login, password);
+                log.info("Created user login {} for address {} with password {} because it didn't exist before.", login, email,
+                    password);
+            }
+            return user;
+        }
+    };
 
     public UserManager(ImapHostManager imapHostManager) {
         this.imapHostManager = imapHostManager;
@@ -119,5 +138,17 @@ public class UserManager {
     public boolean hasUser(String userId) {
         String normalized = normalizerUserName(userId);
         return loginToUser.containsKey(normalized) || emailToUser.containsKey(normalized);
+    }
+
+    public void setMessageDeliveryHandler(MessageDeliveryHandler deliveryHandler) {
+        this.messageDeliveryHandler = deliveryHandler;
+    }
+
+    public MessageDeliveryHandler getMessageDeliveryHandler() {
+        return messageDeliveryHandler;
+    }
+
+    public void deliver(MovingMessage msg, MailAddress mailAddress) throws MessagingException, UserException {
+        messageDeliveryHandler.handle(msg, mailAddress).deliver(msg);
     }
 }

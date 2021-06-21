@@ -1,16 +1,14 @@
 package com.icegreen.greenmail.examples;
 
 import com.icegreen.greenmail.junit.GreenMailRule;
-import com.icegreen.greenmail.user.UserException;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.sun.mail.imap.IMAPStore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.io.UnsupportedEncodingException;
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +20,7 @@ public class ExampleJavaMailTest {
     public final GreenMailRule greenMail = new GreenMailRule(ServerSetupTest.SMTP_IMAP);
 
     @Test
-    public void testSendAndReceive() throws UnsupportedEncodingException, MessagingException, UserException {
+    public void testSendAndReceive() throws MessagingException {
         Session smtpSession = greenMail.getSmtp().createSession();
 
         Message msg = new MimeMessage(smtpSession);

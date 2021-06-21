@@ -8,7 +8,7 @@ import com.icegreen.greenmail.foedus.util.MsgRangeFilter;
 import com.icegreen.greenmail.imap.commands.IdRange;
 import com.icegreen.greenmail.util.MaxSizeLinkedHashMap;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 import java.util.*;
 
 import static java.lang.String.format;
@@ -20,7 +20,7 @@ public class MapBasedStoredMessageCollection implements StoredMessageCollection 
     private final Map<Long, StoredMessage> mailMessages;
 
     public MapBasedStoredMessageCollection(final int maximumMapSize) {
-        mailMessages = Collections.synchronizedMap(new MaxSizeLinkedHashMap<Long, StoredMessage>(maximumMapSize));
+        mailMessages = Collections.synchronizedMap(new MaxSizeLinkedHashMap<>(maximumMapSize));
     }
 
     @Override

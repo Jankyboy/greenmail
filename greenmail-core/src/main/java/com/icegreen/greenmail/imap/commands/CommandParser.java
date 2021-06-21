@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import com.icegreen.greenmail.imap.ImapConstants;
 import com.icegreen.greenmail.imap.ImapRequestLineReader;
@@ -85,12 +85,16 @@ public class CommandParser {
             case '{':
                 return new String(consumeLiteralAsBytes(request), charset);
             default:
-                return atom(request);
+                return consumeWord(request);
         }
     }
 
     /**
      * Reads an argument of type "nstring" from the request.
+     *
+     * https://tools.ietf.org/html/rfc3501#page-88 :
+     * nstring         = string / nil
+     * nil             = "NIL"
      */
     public String nstring(ImapRequestLineReader request) throws ProtocolException {
         char next = request.nextWordChar();
@@ -100,7 +104,7 @@ public class CommandParser {
             case '{':
                 return consumeLiteral(request);
             default:
-                String value = atom(request);
+                String value = consumeWord(request);
                 if ("NIL".equals(value)) {
                     return null;
                 } else {
@@ -150,6 +154,13 @@ public class CommandParser {
         } catch (ParseException e) {
             throw new ProtocolException("Invalid date format <" + dateString + ">, should comply to dd-MMM-yyyy hh:mm:ss Z");
         }
+    }
+
+    /**
+     * Reads the next "word from the request, comprising all characters up to the next SPACE.
+     */
+    protected String consumeWord(ImapRequestLineReader request) throws ProtocolException {
+        return consumeWord(request, new NoopCharValidator());
     }
 
     /**
@@ -437,7 +448,7 @@ public class CommandParser {
         }
         String range = nextWord.substring(pos);
         rangeList.add(IdRange.parseRange(range));
-        return rangeList.toArray(new IdRange[rangeList.size()]);
+        return rangeList.toArray(new IdRange[0]);
     }
 
     /**
@@ -490,7 +501,7 @@ public class CommandParser {
         return next == '(' || next == ')' || next == '{'
                 || next == ' ' // SP
                 || next == '%' || next == '*' // list-wildcards
-                || (next >= 0 && next <= 1F) || next == 7F // CTL
+                || next <= 1F || next == 7F // CTL
                 || next == '"' // quoted-specials = DQUOTE / "\"
                 || next == ']'  // resp-specials
                 ;

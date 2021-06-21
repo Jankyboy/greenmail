@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,8 +76,8 @@ public class AuthenticationDisabledTest {
     }
 
     @Test
-    public void testPop3ConnectNoAuth() throws MessagingException, UserException, FolderException {
-        UserManager userManager = greenMail.getManagers().getUserManager();
+    public void testPop3ConnectNoAuth() throws UserException, FolderException {
+        UserManager userManager = greenMail.getUserManager();
         Pop3State status = new Pop3State(userManager);
         userManager.setAuthRequired(false);
 
@@ -87,8 +87,8 @@ public class AuthenticationDisabledTest {
     }
 
     @Test(expected = UserException.class)
-    public void testPop3ConnectAuth() throws MessagingException, UserException, FolderException {
-        UserManager userManager = greenMail.getManagers().getUserManager();
+    public void testPop3ConnectAuth() throws UserException, FolderException {
+        UserManager userManager = greenMail.getUserManager();
         Pop3State status = new Pop3State(userManager);
         userManager.setAuthRequired(true);
 

@@ -7,8 +7,9 @@ import com.icegreen.greenmail.pop3.Pop3Server;
 import com.icegreen.greenmail.smtp.SmtpServer;
 import com.icegreen.greenmail.store.FolderException;
 import com.icegreen.greenmail.user.GreenMailUser;
+import com.icegreen.greenmail.user.UserManager;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 import java.util.Properties;
 
 /**
@@ -51,6 +52,11 @@ public interface GreenMailOperations {
     Managers getManagers();
 
     /**
+     * @return the user manager for
+     */
+    UserManager getUserManager();
+
+    /**
      * Use this method if you are sending email in a different thread from the one you're testing from.
      * Block waits for an email to arrive in any mailbox for any user.
      * Implementation Detail: No polling wait implementation
@@ -70,7 +76,7 @@ public interface GreenMailOperations {
     boolean waitForIncomingEmail(int emailCount);
 
     /**
-     * @return Returns all messags in all folders for all users
+     * @return Returns all messages in all folders for all users
      * {@link com.icegreen.greenmail.util.GreenMailUtil} has a bunch of static helper methods to extract body text etc.
      */
     MimeMessage[] getReceivedMessages();
@@ -143,9 +149,16 @@ public interface GreenMailOperations {
     void reset();
 
     /**
+     * Checks if GreenMail is up and running.
+     *
+     * @return true if ready to serve.
+     */
+    boolean isRunning();
+
+    /**
      * Remove/purge all data from all mail stores (POP3/IMAP)
      *
      * @throws FolderException on error
-    */
+     */
     void purgeEmailFromAllMailboxes() throws FolderException;
 }

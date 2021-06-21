@@ -1,6 +1,6 @@
 package com.icegreen.greenmail.junit5;
 
-import javax.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMessage;
 
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -18,9 +18,9 @@ class MultipleSetupsTests {
     @Test
     @DisplayName("Receive test")
     void testReceive() {
-        greenMail.setUser("to@localhost.com", "login-id", "password");
-        GreenMailUtil.sendTextEmailTest("to@localhost.com", "from@localhost.com", "subject", "body");
-        GreenMailUtil.sendTextEmailTest("to@localhost.com", "from@localhost.com", "subject", "body");
+        greenMail.setUser("to@localhost", "login-id", "password");
+        GreenMailUtil.sendTextEmailTest("to@localhost", "from@localhost", "subject", "body");
+        GreenMailUtil.sendTextEmailTest("to@localhost", "from@localhost", "subject", "body");
         final MimeMessage[] emails = greenMail.getReceivedMessages();
         assertEquals(2, emails.length);
     }
